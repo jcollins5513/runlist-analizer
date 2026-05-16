@@ -47,12 +47,20 @@ export async function POST(req: NextRequest) {
   }
 
   if (!csvFile) {
-    return NextResponse.json({ error: 'No CSV attachment found' }, { status: 200 })
+    console.warn(`Mailgun: no CSV attachment from ${senderEmail}`)
+    return NextResponse.json({ ok: true, noCsv: true })
   }
 
-  const blob = await put(`runlists/email-${Date.now()}-${filename}`, csvFile, {
-    access: 'public',
-  })
+  let blob: Awaited<ReturnType<typeof put>>
+  try {
+    blob = await put(`runlists/email-${Date.now()}-${filename}`, csvFile, {
+      access: 'public',
+    })
+  } catch (err) {
+    console.error(`Mailgun: blob upload failed for ${senderEmail}`, err)
+    // Return 200 so Mailgun does not retry — we can't fix a storage error by retrying
+    return NextResponse.json({ ok: true, error: 'Upload failed' })
+  }
 
   const runList = await db.runList.create({
     data: {
@@ -64,7 +72,14 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  await processRunList(runList.id)
+  try {
+    await processRunList(runList.id)
+    console.log(`Mailgun: run list ${runList.id} processed successfully for ${senderEmail}`)
+  } catch (err) {
+    // Pipeline already sets status to 'error' in DB and re-throws — catch here to return 200
+    console.error(`Mailgun: pipeline failed for run list ${runList.id}`, err)
+    return NextResponse.json({ ok: true, runListId: runList.id, status: 'error' })
+  }
 
   return NextResponse.json({ ok: true, runListId: runList.id })
 }
