@@ -19,13 +19,16 @@ export async function getMarketDemand(
 
   const count = await fetchMarketDemand(make, model, year)
 
-  await redis.set(key, count, { ex: THIRTY_DAYS_SECONDS })
-
-  await db.marketCache.upsert({
-    where: { make_model_year: { make, model, year } },
-    update: { listingCount: count, demandScore: count, lastRefreshedAt: new Date() },
-    create: { make, model, year, listingCount: count, demandScore: count },
-  })
+  try {
+    await redis.set(key, count, { ex: THIRTY_DAYS_SECONDS })
+    await db.marketCache.upsert({
+      where: { make_model_year: { make, model, year } },
+      update: { listingCount: count, demandScore: count, lastRefreshedAt: new Date() },
+      create: { make, model, year, listingCount: count, demandScore: count },
+    })
+  } catch (err) {
+    console.error('market-cache: write-back failed', err)
+  }
 
   return count
 }
