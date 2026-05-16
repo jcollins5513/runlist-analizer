@@ -31,7 +31,7 @@ export function Sidebar() {
       </nav>
       <Separator />
       <div className="p-4">
-        <UserButton afterSignOutUrl="/sign-in" />
+        <UserButton />
       </div>
     </aside>
   )
