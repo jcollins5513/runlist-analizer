@@ -23,7 +23,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unknown sourceId' }, { status: 400 })
   }
 
-  const blob = await put(`runlists/${Date.now()}-${file.name}`, file, { access: 'public' })
+  let blob: Awaited<ReturnType<typeof put>>
+  try {
+    blob = await put(`runlists/${Date.now()}-${file.name}`, file, { access: 'public' })
+  } catch (err) {
+    return NextResponse.json(
+      { error: 'File upload failed', detail: err instanceof Error ? err.message : 'Unknown error' },
+      { status: 500 }
+    )
+  }
 
   const runList = await db.runList.create({
     data: {
@@ -35,7 +43,18 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  await processRunList(runList.id)
+  try {
+    await processRunList(runList.id)
+  } catch (err) {
+    return NextResponse.json(
+      {
+        runListId: runList.id,
+        status: 'error',
+        error: err instanceof Error ? err.message : 'Processing failed',
+      },
+      { status: 422 }
+    )
+  }
 
   return NextResponse.json({ runListId: runList.id, status: 'scored' })
 }
