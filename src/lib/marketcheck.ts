@@ -5,8 +5,13 @@ export async function fetchMarketDemand(
   model: string,
   year: number
 ): Promise<number> {
+  const apiKey = process.env.MARKETCHECK_API_KEY
+  if (!apiKey) {
+    throw new Error('Missing MARKETCHECK_API_KEY environment variable')
+  }
+
   const params = new URLSearchParams({
-    api_key: process.env.MARKETCHECK_API_KEY!,
+    api_key: apiKey,
     year: String(year),
     make,
     model,
