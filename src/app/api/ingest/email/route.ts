@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
 import { db } from '@/lib/db'
@@ -8,8 +9,39 @@ function extractEmail(raw: string): string {
   return (match ? match[1] : raw).toLowerCase().trim()
 }
 
+function verifyMailgunSignature(
+  signingKey: string,
+  timestamp: string,
+  token: string,
+  signature: string
+): boolean {
+  const value = timestamp + token
+  const expected = createHmac('sha256', signingKey).update(value).digest('hex')
+  try {
+    return timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+  } catch {
+    return false
+  }
+}
+
 export async function POST(req: NextRequest) {
   const formData = await req.formData()
+
+  const timestamp = formData.get('timestamp') as string | null
+  const token = formData.get('token') as string | null
+  const signature = formData.get('signature') as string | null
+  const signingKey = process.env.HTTP_SIGNING_KEY
+
+  if (!signingKey) {
+    console.error('Mailgun: HTTP_SIGNING_KEY not configured')
+    return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+  }
+
+  if (!timestamp || !token || !signature || !verifyMailgunSignature(signingKey, timestamp, token, signature)) {
+    console.warn('Mailgun: invalid signature — request rejected')
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 403 })
+  }
+
   const rawSender = formData.get('sender') as string | null
 
   if (!rawSender) {
