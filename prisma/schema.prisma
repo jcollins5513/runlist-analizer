@@ -1,13 +1,91 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model AuctionSource {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  displayName String
+  columnMap   Json
+  isPreset    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  runLists RunList[]
+  emails   AuctionSourceEmail[]
+
+  @@map("auction_sources")
+}
+
+model AuctionSourceEmail {
+  id           String        @id @default(uuid())
+  emailAddress String        @unique
+  sourceId     String
+  source       AuctionSource @relation(fields: [sourceId], references: [id])
+
+  @@map("auction_source_emails")
+}
+
+model RunList {
+  id           String        @id @default(uuid())
+  userId       String
+  sourceId     String
+  source       AuctionSource @relation(fields: [sourceId], references: [id])
+  blobUrl      String
+  filename     String
+  status       String        @default("pending")
+  errorMessage String?
+  uploadedAt   DateTime      @default(now())
+  scoredAt     DateTime?
+
+  vehicles RunListVehicle[]
+
+  @@map("run_lists")
+}
+
+model RunListVehicle {
+  id          String   @id @default(uuid())
+  runListId   String
+  runList     RunList  @relation(fields: [runListId], references: [id], onDelete: Cascade)
+  vin         String
+  year        Int
+  make        String
+  model       String
+  trim        String?
+  odometer    Int?
+  crGrade     Decimal? @db.Decimal(3, 1)
+  mmr         Int?
+  demandScore Int?
+  demandRank  Int?
+  rawData     Json
+
+  @@map("run_list_vehicles")
+}
+
+model MarketCache {
+  id              String   @id @default(uuid())
+  make            String
+  model           String
+  year            Int
+  listingCount    Int
+  demandScore     Int
+  lastRefreshedAt DateTime @default(now())
+
+  @@unique([make, model, year])
+  @@map("market_cache")
+}
+
+model FilterPreset {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  filters   Json
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("filter_presets")
 }
