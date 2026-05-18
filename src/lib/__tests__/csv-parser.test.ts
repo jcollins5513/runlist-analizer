@@ -113,4 +113,16 @@ describe('parseRunList — carfax fields', () => {
     expect(v.accidents).toBeUndefined()
     expect(v.owners).toBeUndefined()
   })
+
+  it('strips year+make prefix from model when source stores full description', () => {
+    const csv = `VIN,Year,Make,Model\n1HGBH41JXMN109186,2024,TOYOTA,2024 TOYOTA COROLLA CROSS XLE`
+    const [v] = parseRunList(csv, { vin: 'VIN', year: 'Year', make: 'Make', model: 'Model' })
+    expect(v.model).toBe('COROLLA CROSS XLE')
+  })
+
+  it('does not modify model when it has no year+make prefix', () => {
+    const csv = `VIN,Year,Make,Model\n1HGBH41JXMN109186,2022,Honda,Civic`
+    const [v] = parseRunList(csv, { vin: 'VIN', year: 'Year', make: 'Make', model: 'Model' })
+    expect(v.model).toBe('Civic')
+  })
 })
