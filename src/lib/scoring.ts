@@ -16,21 +16,26 @@ export async function scoreRunList(runListId: string): Promise<void> {
     where: { runListId, isExcluded: false },
   })
 
-  if (vehicles.length === 0) return
-
-  const scores = await Promise.all(
-    vehicles.map(v =>
-      getMarketDemand(v.make, v.model, v.year).catch(() => 0)
+  if (vehicles.length > 0) {
+    const scores = await Promise.all(
+      vehicles.map(v =>
+        getMarketDemand(v.make, v.model, v.year).catch(() => 0)
+      )
     )
-  )
-  const ranks = rankVehicles(scores)
+    const ranks = rankVehicles(scores)
 
-  await Promise.all(
-    vehicles.map((v, i) =>
-      db.runListVehicle.update({
-        where: { id: v.id },
-        data: { demandScore: scores[i], demandRank: ranks[i] },
-      })
+    await Promise.all(
+      vehicles.map((v, i) =>
+        db.runListVehicle.update({
+          where: { id: v.id },
+          data: { demandScore: scores[i], demandRank: ranks[i] },
+        })
+      )
     )
-  )
+  }
+
+  await db.runList.update({
+    where: { id: runListId },
+    data: { status: 'scored', scoredAt: new Date() },
+  })
 }
