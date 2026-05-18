@@ -1,6 +1,18 @@
 import { db } from '@/lib/db'
 import { getMarketDemand } from '@/lib/market-cache'
 
+export interface ScoreFilters {
+  yearMin?: number
+  yearMax?: number
+  makes?: string[]
+  gradeMin?: number
+  odomMax?: number
+  mmrMin?: number
+  mmrMax?: number
+  accMax?: number
+  ownMax?: number
+}
+
 export function rankVehicles(scores: number[]): number[] {
   const indexed = scores.map((score, i) => ({ score, i }))
   indexed.sort((a, b) => b.score - a.score)
@@ -11,15 +23,31 @@ export function rankVehicles(scores: number[]): number[] {
   return ranks
 }
 
-export async function scoreRunList(runListId: string): Promise<void> {
-  const vehicles = await db.runListVehicle.findMany({
+export async function scoreRunList(runListId: string, filters: ScoreFilters = {}): Promise<void> {
+  const allVehicles = await db.runListVehicle.findMany({
     where: { runListId, isExcluded: false },
+  })
+
+  const { yearMin, yearMax, makes, gradeMin, odomMax, mmrMin, mmrMax, accMax, ownMax } = filters
+  const vehicles = allVehicles.filter(v => {
+    if (yearMin && v.year < yearMin) return false
+    if (yearMax && v.year > yearMax) return false
+    if (makes && makes.length > 0 && !makes.some(m => m.toLowerCase() === v.make.toLowerCase())) return false
+    if (gradeMin && (v.crGrade == null || Number(v.crGrade) < gradeMin)) return false
+    if (odomMax && v.odometer != null && v.odometer > odomMax) return false
+    if (mmrMin && v.mmr != null && v.mmr < mmrMin) return false
+    if (mmrMax && v.mmr != null && v.mmr > mmrMax) return false
+    if (accMax != null && v.accidents != null && v.accidents > accMax) return false
+    if (ownMax && v.owners != null && v.owners > ownMax) return false
+    return true
   })
 
   if (vehicles.length > 0) {
     const scores = await Promise.all(
       vehicles.map(v =>
-        getMarketDemand(v.make, v.model, v.year).catch(() => 0)
+        v.demandScore != null && v.demandScore > 0
+          ? Promise.resolve(v.demandScore)
+          : getMarketDemand(v.make, v.model, v.year).catch(() => 0)
       )
     )
     const ranks = rankVehicles(scores)

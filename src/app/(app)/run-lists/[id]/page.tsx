@@ -80,7 +80,7 @@ export default async function RunListDetailPage({
     if (rankMax && v.demandRank != null && v.demandRank > parseInt(rankMax)) return false
     if (yearMin && v.year < parseInt(yearMin)) return false
     if (yearMax && v.year > parseInt(yearMax)) return false
-    if (makes.length > 0 && !makes.some(m => m.toLowerCase() === v.make.toLowerCase())) return false
+    if (makes.length > 0 && makes.some(m => m.toLowerCase() === v.make.toLowerCase())) return false
     return true
   })
 

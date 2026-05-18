@@ -1,38 +1,73 @@
+'use client'
+
 import Link from 'next/link'
+import { motion } from 'motion/react'
+import { LayoutDashboard, List, Database, Settings, BarChart2 } from 'lucide-react'
 import { UserButton } from '@clerk/nextjs'
-import { LayoutDashboard, List, Database, Settings } from 'lucide-react'
-import { Separator } from '@/components/ui/separator'
+import {
+  Sidebar as AcetSidebar,
+  SidebarBody,
+  SidebarLink,
+  useSidebar,
+} from '@/components/ui/sidebar'
 
 const links = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/run-lists', label: 'Run Lists', icon: List },
-  { href: '/sources', label: 'Sources', icon: Database },
-  { href: '/settings', label: 'Settings', icon: Settings },
+  {
+    href: '/dashboard',
+    label: 'Dashboard',
+    icon: <LayoutDashboard className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+  },
+  {
+    href: '/run-lists',
+    label: 'Run Lists',
+    icon: <List className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+  },
+  {
+    href: '/sources',
+    label: 'Sources',
+    icon: <Database className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+  },
+  {
+    href: '/settings',
+    label: 'Settings',
+    icon: <Settings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+  },
 ]
+
+function Logo() {
+  const { open, animate } = useSidebar()
+  return (
+    <Link href="/dashboard" className="flex items-center gap-2 py-1 mb-6">
+      <BarChart2 className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      <motion.span
+        animate={{
+          display: animate ? (open ? 'inline-block' : 'none') : 'inline-block',
+          opacity: animate ? (open ? 1 : 0) : 1,
+        }}
+        className="font-semibold text-sm text-neutral-900 dark:text-neutral-100 whitespace-pre"
+      >
+        Run List Analyzer
+      </motion.span>
+    </Link>
+  )
+}
 
 export function Sidebar() {
   return (
-    <aside className="w-56 min-h-screen border-r bg-background flex flex-col shrink-0">
-      <div className="p-4">
-        <p className="text-sm font-semibold tracking-tight">Run List Analyzer</p>
-      </div>
-      <Separator />
-      <nav className="flex-1 p-2 space-y-1">
-        {links.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            {label}
-          </Link>
-        ))}
-      </nav>
-      <Separator />
-      <div className="p-4">
-        <UserButton />
-      </div>
-    </aside>
+    <AcetSidebar animate={true}>
+      <SidebarBody className="justify-between gap-10">
+        <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+          <Logo />
+          <div className="flex flex-col gap-2">
+            {links.map(link => (
+              <SidebarLink key={link.href} link={link} />
+            ))}
+          </div>
+        </div>
+        <div>
+          <UserButton />
+        </div>
+      </SidebarBody>
+    </AcetSidebar>
   )
 }

@@ -2,6 +2,43 @@ import { db } from '@/lib/db'
 import { parseRunList } from '@/lib/csv-parser'
 import type { ColumnMap } from '@/types'
 
+export async function refreshRunListVehicles(runListId: string): Promise<void> {
+  const runList = await db.runList.findUniqueOrThrow({
+    where: { id: runListId },
+    include: { source: true },
+  })
+
+  const res = await fetch(runList.blobUrl)
+  if (!res.ok) return
+
+  const csvText = await res.text()
+  const columnMap = runList.source.columnMap as ColumnMap
+  const vehicles = parseRunList(csvText, columnMap)
+
+  const existing = await db.runListVehicle.findMany({ where: { runListId } })
+  const vinToId = new Map(existing.map(v => [v.vin, v.id]))
+
+  const updates = vehicles.filter(v => vinToId.has(v.vin))
+  if (updates.length === 0) return
+
+  await db.$transaction(
+    updates.map(v =>
+      db.runListVehicle.update({
+        where: { id: vinToId.get(v.vin)! },
+        data: {
+          odometer: v.odometer ?? null,
+          crGrade: v.crGrade != null ? v.crGrade : null,
+          mmr: v.mmr ?? null,
+          accidents: v.accidents ?? null,
+          owners: v.owners ?? null,
+          ownershipType: v.ownershipType ?? null,
+          carfaxValue: v.carfaxValue ?? null,
+        },
+      })
+    )
+  )
+}
+
 export async function ingestRunList(runListId: string): Promise<void> {
   const runList = await db.runList.findUniqueOrThrow({
     where: { id: runListId },

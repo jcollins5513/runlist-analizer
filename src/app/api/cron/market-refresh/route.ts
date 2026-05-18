@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { redis } from '@/lib/redis'
-import { fetchMarketDemand } from '@/lib/marketcheck'
+import { fetchSalesStats } from '@/lib/marketcheck'
 
 const THIRTY_DAYS_SECONDS = 60 * 60 * 24 * 30
 
@@ -17,15 +17,15 @@ export async function GET(req: NextRequest) {
 
   for (const entry of entries) {
     try {
-      const count = await fetchMarketDemand(entry.make, entry.model, entry.year)
-      const key = `market:${entry.make.toLowerCase()}:${entry.model.toLowerCase()}:${entry.year}`
+      const { salesCount, score } = await fetchSalesStats(entry.make, entry.model, entry.year)
+      const key = `market:sales:${entry.make.toLowerCase()}:${entry.model.toLowerCase()}:${entry.year}`
 
-      await redis.set(key, count, { ex: THIRTY_DAYS_SECONDS })
+      await redis.set(key, score, { ex: THIRTY_DAYS_SECONDS })
       await db.marketCache.update({
         where: { id: entry.id },
         data: {
-          listingCount: count,
-          demandScore: count,
+          listingCount: salesCount,
+          demandScore: score,
           lastRefreshedAt: new Date(),
         },
       })
