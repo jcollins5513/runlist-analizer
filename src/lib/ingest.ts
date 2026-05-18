@@ -1,15 +1,12 @@
 import { db } from '@/lib/db'
 import { parseRunList } from '@/lib/csv-parser'
-import { scoreRunList } from '@/lib/scoring'
 import type { ColumnMap } from '@/types'
 
-export async function processRunList(runListId: string): Promise<void> {
+export async function ingestRunList(runListId: string): Promise<void> {
   const runList = await db.runList.findUniqueOrThrow({
     where: { id: runListId },
     include: { source: true },
   })
-
-  if (runList.status === 'scored') return
 
   await db.runList.update({
     where: { id: runListId },
@@ -28,11 +25,28 @@ export async function processRunList(runListId: string): Promise<void> {
       throw new Error('No valid vehicles found in CSV. Check column mapping for this source.')
     }
 
-    await scoreRunList(runListId, vehicles)
+    await db.runListVehicle.createMany({
+      data: vehicles.map(v => ({
+        runListId,
+        vin: v.vin,
+        year: v.year,
+        make: v.make,
+        model: v.model,
+        trim: v.trim ?? null,
+        odometer: v.odometer ?? null,
+        crGrade: v.crGrade != null ? v.crGrade : null,
+        mmr: v.mmr ?? null,
+        accidents: v.accidents ?? null,
+        owners: v.owners ?? null,
+        ownershipType: v.ownershipType ?? null,
+        carfaxValue: v.carfaxValue ?? null,
+        rawData: v.rawData,
+      })),
+    })
 
     await db.runList.update({
       where: { id: runListId },
-      data: { status: 'scored', scoredAt: new Date() },
+      data: { status: 'parsed' },
     })
   } catch (err) {
     await db.runList.update({

@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
 import { db } from '@/lib/db'
-import { processRunList } from '@/lib/pipeline'
+import { ingestRunList } from '@/lib/ingest'
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth()
@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
   try {
     blob = await put(`runlists/${Date.now()}-${file.name}`, file, { access: 'public' })
   } catch (err) {
+    console.error('Blob upload error:', err)
     return NextResponse.json(
       { error: 'File upload failed', detail: err instanceof Error ? err.message : 'Unknown error' },
       { status: 500 }
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
   })
 
   try {
-    await processRunList(runList.id)
+    await ingestRunList(runList.id)
   } catch (err) {
     return NextResponse.json(
       {
@@ -56,5 +57,5 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  return NextResponse.json({ runListId: runList.id, status: 'scored' })
+  return NextResponse.json({ runListId: runList.id, status: 'parsed' })
 }

@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
 import { db } from '@/lib/db'
-import { processRunList } from '@/lib/pipeline'
+import { ingestRunList } from '@/lib/ingest'
 
 function extractEmail(raw: string): string {
   const match = raw.match(/<([^>]+)>/)
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
   })
 
   try {
-    await processRunList(runList.id)
+    await ingestRunList(runList.id)
     console.log(`Mailgun: run list ${runList.id} processed successfully for ${senderEmail}`)
   } catch (err) {
     // Pipeline already sets status to 'error' in DB and re-throws — catch here to return 200
