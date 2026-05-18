@@ -1,0 +1,9 @@
+
+ RUN  v4.1.6 C:/Users/justi/runlist analizer
+
+
+ Test Files  6 passed (6)
+      Tests  35 passed (35)
+   Start at  18:14:48
+   Duration  3.97s (transform 127ms, setup 1.65s, import 323ms, tests 23ms, environment 18.77s)
+

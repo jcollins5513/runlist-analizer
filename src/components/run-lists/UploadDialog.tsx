@@ -56,10 +56,9 @@ export function UploadDialog({ sources }: { sources: Source[] }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button>Upload Run List</Button>
-      </DialogTrigger>
+    <>
+      <Button onClick={() => setOpen(true)}>Upload Run List</Button>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Upload Run List</DialogTitle>
@@ -94,6 +93,7 @@ export function UploadDialog({ sources }: { sources: Source[] }) {
               ref={fileInputRef}
               type="file"
               accept=".csv"
+              aria-label="CSV file"
               className="hidden"
               onChange={e => setFile(e.target.files?.[0] ?? null)}
             />
@@ -110,6 +110,7 @@ export function UploadDialog({ sources }: { sources: Source[] }) {
           </Button>
         </div>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+    </>
   )
 }

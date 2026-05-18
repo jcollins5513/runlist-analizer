@@ -8,6 +8,20 @@ export interface SourcePreset {
 
 export const SOURCE_PRESETS: SourcePreset[] = [
   {
+    name: 'florida-auto-auction',
+    displayName: 'Florida Auto Auction',
+    columnMap: {
+      vin: 'Secondary Description',
+      year: 'Year',
+      make: 'Brand',
+      model: 'Main Description',
+      trim: 'Main Description',
+      odometer: 'Odometer',
+      crGrade: 'Grade',
+      mmr: 'MMR',
+    },
+  },
+  {
     name: 'manheim',
     displayName: 'Manheim',
     columnMap: {
