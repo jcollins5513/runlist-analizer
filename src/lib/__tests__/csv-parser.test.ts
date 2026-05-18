@@ -114,6 +114,20 @@ describe('parseRunList — carfax fields', () => {
     expect(v.owners).toBeUndefined()
   })
 
+  it('parses FAA text "No accidents or damage reported." as 0', () => {
+    const map: ColumnMap = { vin: 'VIN', year: 'Year', make: 'Make', model: 'Model', accidents: 'Acc' }
+    const csv = `VIN,Year,Make,Model,Acc\n1HGBH41JXMN109186,2022,Honda,Civic,No accidents or damage reported.`
+    const [v] = parseRunList(csv, map)
+    expect(v.accidents).toBe(0)
+  })
+
+  it('parses FAA text with one accident report as 1', () => {
+    const map: ColumnMap = { vin: 'VIN', year: 'Year', make: 'Make', model: 'Model', accidents: 'Acc' }
+    const csv = `VIN,Year,Make,Model,Acc\n1HGBH41JXMN109186,2022,Honda,Civic,Accident reported: 08/26/2022. Minor damage.`
+    const [v] = parseRunList(csv, map)
+    expect(v.accidents).toBe(1)
+  })
+
   it('strips year+make prefix from model when source stores full description', () => {
     const csv = `VIN,Year,Make,Model\n1HGBH41JXMN109186,2024,TOYOTA,2024 TOYOTA COROLLA CROSS XLE`
     const [v] = parseRunList(csv, { vin: 'VIN', year: 'Year', make: 'Make', model: 'Model' })

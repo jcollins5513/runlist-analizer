@@ -63,8 +63,15 @@ export function parseRunList(csvText: string, columnMap: ColumnMap): NormalizedV
     }
 
     if (columnMap.accidents) {
-      const acc = parseInt(row[columnMap.accidents] ?? '', 10)
-      if (!isNaN(acc)) vehicle.accidents = acc
+      const accStr = row[columnMap.accidents]?.trim() ?? ''
+      const accNum = parseInt(accStr, 10)
+      if (!isNaN(accNum)) {
+        vehicle.accidents = accNum
+      } else {
+        // FAA text format: "No accidents or damage reported." = 0, else count occurrences
+        vehicle.accidents = accStr.toLowerCase().startsWith('no accidents') ? 0
+          : (accStr.match(/accident reported:/gi) ?? []).length || (accStr.length > 0 ? 1 : 0)
+      }
     }
 
     if (columnMap.owners) {

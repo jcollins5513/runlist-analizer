@@ -19,6 +19,10 @@ export const SOURCE_PRESETS: SourcePreset[] = [
       odometer: 'Odometer',
       crGrade: 'Grade',
       mmr: 'MMR',
+      accidents: 'Accident/Damage History',
+      owners: 'Owner Status',
+      ownershipType: 'Type of Ownership',
+      carfaxValue: 'Carfax Retail Value',
     },
   },
   {
