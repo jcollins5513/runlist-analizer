@@ -1,5 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 
 export async function PATCH(
@@ -16,11 +17,17 @@ export async function PATCH(
   if (!runList) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (runList.userId !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const vehicle = await db.runListVehicle.update({
-    where: { id: vehicleId },
-    data: { isExcluded: body.isExcluded },
-    select: { id: true, isExcluded: true },
-  })
-
-  return NextResponse.json(vehicle)
+  try {
+    const vehicle = await db.runListVehicle.update({
+      where: { id: vehicleId },
+      data: { isExcluded: body.isExcluded },
+      select: { id: true, isExcluded: true },
+    })
+    return NextResponse.json(vehicle)
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+      return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 })
+    }
+    throw err
+  }
 }
