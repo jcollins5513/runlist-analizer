@@ -48,22 +48,39 @@ model RunList {
 }
 
 model RunListVehicle {
-  id          String   @id @default(uuid())
-  runListId   String
-  runList     RunList  @relation(fields: [runListId], references: [id], onDelete: Cascade)
-  vin         String
-  year        Int
-  make        String
-  model       String
-  trim        String?
-  odometer    Int?
-  crGrade     Decimal? @db.Decimal(3, 1)
-  mmr         Int?
-  demandScore Int?
-  demandRank  Int?
-  rawData     Json
+  id            String   @id @default(uuid())
+  runListId     String
+  runList       RunList  @relation(fields: [runListId], references: [id], onDelete: Cascade)
+  vin           String
+  year          Int
+  make          String
+  model         String
+  trim          String?
+  odometer      Int?
+  crGrade       Decimal? @db.Decimal(3, 1)
+  mmr           Int?
+  accidents     Int?
+  owners        Int?
+  ownershipType String?
+  carfaxValue   Int?
+  isExcluded    Boolean  @default(false)
+  demandScore   Int?
+  demandRank    Int?
+  rawData       Json
 
   @@map("run_list_vehicles")
+}
+
+model DealerInventory {
+  id         String   @id @default(uuid())
+  vin        String   @unique
+  year       Int
+  make       String
+  model      String
+  trim       String?
+  importedAt DateTime @default(now())
+
+  @@map("dealer_inventory")
 }
 
 model MarketCache {
