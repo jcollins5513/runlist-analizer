@@ -23,6 +23,12 @@ function row(v: RunListVehicle): string {
   return fields.map(f => `"${String(f).replace(/"/g, '""')}"`).join(',')
 }
 
+function parseNum(s: string | null): number | null {
+  if (!s) return null
+  const n = Number(s)
+  return Number.isFinite(n) ? n : null
+}
+
 const HEADER = '"Rank","VIN","Year","Make","Model","Trim","Odometer","Grade","MMR","Accidents","Owners","Ownership Type","Carfax Value","Demand Score"'
 
 export async function GET(
@@ -39,16 +45,16 @@ export async function GET(
 
   const sp = req.nextUrl.searchParams
   const showExcluded = sp.get('showExcluded') === 'true'
-  const gradeMin = sp.get('gradeMin')
-  const odomMax = sp.get('odomMax')
-  const mmrMin = sp.get('mmrMin')
-  const mmrMax = sp.get('mmrMax')
-  const accMax = sp.get('accMax')
-  const ownMax = sp.get('ownMax')
+  const gradeMin = parseNum(sp.get('gradeMin'))
+  const odomMax = parseNum(sp.get('odomMax'))
+  const mmrMin = parseNum(sp.get('mmrMin'))
+  const mmrMax = parseNum(sp.get('mmrMax'))
+  const accMax = parseNum(sp.get('accMax'))
+  const ownMax = parseNum(sp.get('ownMax'))
   const ownerType = sp.get('ownerType')
-  const rankMax = sp.get('rankMax')
-  const yearMin = sp.get('yearMin')
-  const yearMax = sp.get('yearMax')
+  const rankMax = parseNum(sp.get('rankMax'))
+  const yearMin = parseNum(sp.get('yearMin'))
+  const yearMax = parseNum(sp.get('yearMax'))
   const makesRaw = sp.get('makes')
   const makes = makesRaw ? makesRaw.split(',').map(m => m.trim()).filter(Boolean) : []
 
@@ -59,22 +65,23 @@ export async function GET(
 
   const filtered = all.filter(v => {
     if (!showExcluded && v.isExcluded) return false
-    if (gradeMin && (v.crGrade == null || Number(v.crGrade) < parseFloat(gradeMin))) return false
-    if (odomMax && v.odometer != null && v.odometer > parseInt(odomMax)) return false
-    if (mmrMin && v.mmr != null && v.mmr < parseInt(mmrMin)) return false
-    if (mmrMax && v.mmr != null && v.mmr > parseInt(mmrMax)) return false
-    if (accMax && v.accidents != null && v.accidents > parseInt(accMax)) return false
-    if (ownMax && v.owners != null && v.owners > parseInt(ownMax)) return false
+    if (gradeMin != null && (v.crGrade == null || Number(v.crGrade) < gradeMin)) return false
+    if (odomMax != null && v.odometer != null && v.odometer > odomMax) return false
+    if (mmrMin != null && v.mmr != null && v.mmr < mmrMin) return false
+    if (mmrMax != null && v.mmr != null && v.mmr > mmrMax) return false
+    if (accMax != null && v.accidents != null && v.accidents > accMax) return false
+    if (ownMax != null && v.owners != null && v.owners > ownMax) return false
     if (ownerType && v.ownershipType && v.ownershipType.toLowerCase() !== ownerType.toLowerCase()) return false
-    if (rankMax && v.demandRank != null && v.demandRank > parseInt(rankMax)) return false
-    if (yearMin && v.year < parseInt(yearMin)) return false
-    if (yearMax && v.year > parseInt(yearMax)) return false
+    if (rankMax != null && v.demandRank != null && v.demandRank > rankMax) return false
+    if (yearMin != null && v.year < yearMin) return false
+    if (yearMax != null && v.year > yearMax) return false
     if (makes.length > 0 && !makes.some(m => m.toLowerCase() === v.make.toLowerCase())) return false
     return true
   })
 
   const csv = [HEADER, ...filtered.map(row)].join('\n')
-  const filename = runList.filename.replace(/\.csv$/i, '') + '-curated.csv'
+  const rawFilename = runList.filename.replace(/\.csv$/i, '') + '-curated.csv'
+  const filename = rawFilename.replace(/["\r\n]/g, '_')
 
   return new NextResponse(csv, {
     headers: {

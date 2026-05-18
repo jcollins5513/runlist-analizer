@@ -15,11 +15,17 @@ export function ScoreButton({ runListId, status }: { runListId: string; status: 
     try {
       const res = await fetch(`/api/run-lists/${runListId}/score`, { method: 'POST' })
       if (!res.ok) {
-        const body = await res.json()
-        alert(body.error ?? 'Scoring failed')
+        let errorMsg = 'Scoring failed'
+        try {
+          const body = await res.json()
+          errorMsg = body.error ?? errorMsg
+        } catch { /* non-JSON body */ }
+        alert(errorMsg)
         return
       }
       router.refresh()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Network error — could not reach the server')
     } finally {
       setLoading(false)
     }

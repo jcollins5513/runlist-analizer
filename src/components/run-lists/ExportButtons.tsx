@@ -36,7 +36,7 @@ export function ExportButtons({ runListId, searchParams }: { runListId: string; 
     a.click()
 
     const subject = encodeURIComponent('Auction Run List')
-    window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent('See attached run list CSV.')}`
+    window.open(`mailto:?subject=${subject}&body=${encodeURIComponent('See attached run list CSV.')}`, '_blank')
   }
 
   return (
