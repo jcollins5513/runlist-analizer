@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Badge } from '@/components/ui/badge'
-import { Decimal } from '@prisma/client/runtime/library'
 import { FilterSidebar } from '@/components/run-lists/FilterSidebar'
 import { VehicleTable } from '@/components/run-lists/VehicleTable'
 import { ScoreButton } from '@/components/run-lists/ScoreButton'
@@ -94,8 +93,9 @@ export default async function RunListDetailPage({
     if (av == null && bv == null) return 0
     if (av == null) return 1
     if (bv == null) return -1
-    if (av instanceof Decimal && bv instanceof Decimal) return dir * (Number(av) - Number(bv))
-    if (typeof av === 'number' && typeof bv === 'number') return dir * (av - bv)
+    const an = Number(av)
+    const bn = Number(bv)
+    if (!isNaN(an) && !isNaN(bn)) return dir * (an - bn)
     return dir * String(av).localeCompare(String(bv))
   })
 
