@@ -64,3 +64,53 @@ describe('parseRunList', () => {
     expect(v.rawData['Vin']).toBe('1HGBH41JXMN109186')
   })
 })
+
+describe('parseRunList — carfax fields', () => {
+  const CARFAX_MAP: ColumnMap = {
+    vin: 'VIN',
+    year: 'Year',
+    make: 'Make',
+    model: 'Model',
+    accidents: 'Accidents',
+    owners: 'Owners',
+    ownershipType: 'Title Type',
+    carfaxValue: 'Carfax Value',
+  }
+
+  const CSV_CARFAX = `VIN,Year,Make,Model,Accidents,Owners,Title Type,Carfax Value
+1HGBH41JXMN109186,2022,Honda,Civic,1,2,Personal,"$15,000"
+2T1BURHE0JC034620,2018,Toyota,Corolla,0,1,Personal,$12500`
+
+  it('parses accident count', () => {
+    const [v] = parseRunList(CSV_CARFAX, CARFAX_MAP)
+    expect(v.accidents).toBe(1)
+  })
+
+  it('parses owner count', () => {
+    const [v] = parseRunList(CSV_CARFAX, CARFAX_MAP)
+    expect(v.owners).toBe(2)
+  })
+
+  it('parses ownershipType', () => {
+    const [v] = parseRunList(CSV_CARFAX, CARFAX_MAP)
+    expect(v.ownershipType).toBe('Personal')
+  })
+
+  it('parses carfaxValue stripping $ and commas', () => {
+    const [v] = parseRunList(CSV_CARFAX, CARFAX_MAP)
+    expect(v.carfaxValue).toBe(15000)
+  })
+
+  it('parses zero accidents correctly', () => {
+    const vehicles = parseRunList(CSV_CARFAX, CARFAX_MAP)
+    expect(vehicles[1].accidents).toBe(0)
+  })
+
+  it('leaves carfax fields undefined when columns not mapped', () => {
+    const map: ColumnMap = { vin: 'VIN', year: 'Year', make: 'Make', model: 'Model' }
+    const csv = `VIN,Year,Make,Model\n1HGBH41JXMN109186,2022,Honda,Civic`
+    const [v] = parseRunList(csv, map)
+    expect(v.accidents).toBeUndefined()
+    expect(v.owners).toBeUndefined()
+  })
+})

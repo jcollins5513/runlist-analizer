@@ -13,9 +13,15 @@ export function parseRunList(csvText: string, columnMap: ColumnMap): NormalizedV
     const vin = row[columnMap.vin]?.trim()
     const yearStr = row[columnMap.year]?.trim()
     const make = row[columnMap.make]?.trim()
-    const model = row[columnMap.model]?.trim()
+    let model = row[columnMap.model]?.trim()
 
     if (!vin || !yearStr || !make || !model) continue
+
+    // Strip leading "{year} {make} " prefix when source stores full description in model column
+    const descPrefix = `${yearStr} ${make} `
+    if (model.toUpperCase().startsWith(descPrefix.toUpperCase())) {
+      model = model.substring(descPrefix.length).trim()
+    }
 
     const year = parseInt(yearStr, 10)
     if (isNaN(year)) continue
@@ -54,6 +60,26 @@ export function parseRunList(csvText: string, columnMap: ColumnMap): NormalizedV
       }
       const mmr = parseFloat(mmrStr.replace(/[$,]/g, '') ?? '')
       if (!isNaN(mmr)) vehicle.mmr = Math.round(mmr)
+    }
+
+    if (columnMap.accidents) {
+      const acc = parseInt(row[columnMap.accidents] ?? '', 10)
+      if (!isNaN(acc)) vehicle.accidents = acc
+    }
+
+    if (columnMap.owners) {
+      const own = parseInt(row[columnMap.owners] ?? '', 10)
+      if (!isNaN(own)) vehicle.owners = own
+    }
+
+    if (columnMap.ownershipType) {
+      const ot = row[columnMap.ownershipType]?.trim()
+      if (ot) vehicle.ownershipType = ot
+    }
+
+    if (columnMap.carfaxValue) {
+      const cv = parseFloat(row[columnMap.carfaxValue]?.replace(/[$,]/g, '') ?? '')
+      if (!isNaN(cv)) vehicle.carfaxValue = Math.round(cv)
     }
 
     vehicles.push(vehicle)
