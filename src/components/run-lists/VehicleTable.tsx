@@ -5,6 +5,8 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import type { RunListVehicle } from '@prisma/client'
 import type { StockLevel } from '@/types'
 
+type VehicleRow = Omit<RunListVehicle, 'crGrade'> & { crGrade: number | null }
+
 const STOCK_STYLE: Record<StockLevel, string> = {
   none: 'bg-green-500',
   low: 'bg-yellow-400',
@@ -43,7 +45,7 @@ export function VehicleTable({
   currentSort,
   currentDir,
 }: {
-  vehicles: RunListVehicle[]
+  vehicles: VehicleRow[]
   stockLevels: Record<string, StockLevel>
   runListId: string
   currentSort: string
@@ -64,7 +66,7 @@ export function VehicleTable({
     return `${pathname}?${params.toString()}`
   }
 
-  async function toggleExclude(vehicle: RunListVehicle) {
+  async function toggleExclude(vehicle: VehicleRow) {
     await fetch(`/api/run-lists/${runListId}/vehicles/${vehicle.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },

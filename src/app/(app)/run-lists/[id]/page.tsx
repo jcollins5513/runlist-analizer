@@ -135,7 +135,7 @@ export default async function RunListDetailPage({
           </div>
 
           <VehicleTable
-            vehicles={sorted}
+            vehicles={sorted.map(v => ({ ...v, crGrade: v.crGrade != null ? Number(v.crGrade) : null }))}
             stockLevels={Object.fromEntries(stockLevels)}
             runListId={id}
             currentSort={validSort}
