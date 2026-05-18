@@ -67,10 +67,16 @@ export function parseRunList(csvText: string, columnMap: ColumnMap): NormalizedV
       const accNum = parseInt(accStr, 10)
       if (!isNaN(accNum)) {
         vehicle.accidents = accNum
+      } else if (accStr.toLowerCase().includes('no accidents')) {
+        vehicle.accidents = 0
       } else {
-        // FAA text format: "No accidents or damage reported." = 0, else count occurrences
-        vehicle.accidents = accStr.toLowerCase().startsWith('no accidents') ? 0
-          : (accStr.match(/accident reported:/gi) ?? []).length || (accStr.length > 0 ? 1 : 0)
+        // FAA text format: find "Accident[s] reported: DATE, DATE, ..." segments,
+        // count MM/DD/YYYY dates in each. "Damage reported:" lines are excluded.
+        const segments = accStr.match(/[Aa]ccidents? reported:[^.]+/g) ?? []
+        vehicle.accidents = segments.reduce(
+          (sum, seg) => sum + (seg.match(/\d{2}\/\d{2}\/\d{4}/g)?.length ?? 0),
+          0
+        )
       }
     }
 

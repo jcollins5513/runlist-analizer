@@ -121,11 +121,32 @@ describe('parseRunList — carfax fields', () => {
     expect(v.accidents).toBe(0)
   })
 
-  it('parses FAA text with one accident report as 1', () => {
+  it('parses FAA text with one accident as 1', () => {
     const map: ColumnMap = { vin: 'VIN', year: 'Year', make: 'Make', model: 'Model', accidents: 'Acc' }
     const csv = `VIN,Year,Make,Model,Acc\n1HGBH41JXMN109186,2022,Honda,Civic,Accident reported: 08/26/2022. Minor damage.`
     const [v] = parseRunList(csv, map)
     expect(v.accidents).toBe(1)
+  })
+
+  it('parses FAA text "Accidents reported: DATE and DATE." as 2', () => {
+    const map: ColumnMap = { vin: 'VIN', year: 'Year', make: 'Make', model: 'Model', accidents: 'Acc' }
+    const csv = `VIN,Year,Make,Model,Acc\n1HGBH41JXMN109186,2022,Honda,Civic,"Accidents reported: 08/15/2018 and 06/21/2024. Damage reported: 12/14/2019."`
+    const [v] = parseRunList(csv, map)
+    expect(v.accidents).toBe(2)
+  })
+
+  it('parses FAA text with 5 accidents as 5', () => {
+    const map: ColumnMap = { vin: 'VIN', year: 'Year', make: 'Make', model: 'Model', accidents: 'Acc' }
+    const csv = `VIN,Year,Make,Model,Acc\n1HGBH41JXMN109186,2022,Honda,Civic,"Accidents reported: 10/17/2022, 04/05/2023, 06/17/2023, 09/11/2023, and 12/05/2024. Minor damage."`
+    const [v] = parseRunList(csv, map)
+    expect(v.accidents).toBe(5)
+  })
+
+  it('parses FAA text "Damage reported: DATE." (no accident) as 0', () => {
+    const map: ColumnMap = { vin: 'VIN', year: 'Year', make: 'Make', model: 'Model', accidents: 'Acc' }
+    const csv = `VIN,Year,Make,Model,Acc\n1HGBH41JXMN109186,2022,Honda,Civic,Damage reported: 04/16/2018. Minor damage.`
+    const [v] = parseRunList(csv, map)
+    expect(v.accidents).toBe(0)
   })
 
   it('strips year+make prefix from model when source stores full description', () => {
