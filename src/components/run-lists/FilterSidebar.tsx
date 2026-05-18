@@ -36,8 +36,11 @@ export function FilterSidebar({ searchParams, uniqueMakes }: { searchParams: SP;
 
   const toggleMake = (make: string, checked: boolean) => {
     const current = spStr(searchParams, 'makes').split(',').filter(Boolean)
-    const next = checked ? [...current, make] : current.filter(m => m !== make)
-    update('makes', next.join(','))
+    // When 'makes' param is empty, all makes are implicitly selected — expand before removing
+    const effective = current.length === 0 ? uniqueMakes : current
+    const next = checked ? [...new Set([...effective, make])] : effective.filter(m => m !== make)
+    // If everything is selected, clear param (same as all)
+    update('makes', next.length === uniqueMakes.length ? '' : next.join(','))
   }
 
   const clearAll = () => {
