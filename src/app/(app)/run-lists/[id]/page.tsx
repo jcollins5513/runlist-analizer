@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { FilterSidebar } from '@/components/run-lists/FilterSidebar'
 import { VehicleTable } from '@/components/run-lists/VehicleTable'
 import { ScoreButton } from '@/components/run-lists/ScoreButton'
+import { DeleteButton } from '@/components/run-lists/DeleteButton'
 import { ExportButtons } from '@/components/run-lists/ExportButtons'
 import type { StockLevel } from '@/types'
 import type { RunListVehicle, DealerInventory } from '@prisma/client'
@@ -119,11 +120,12 @@ export default async function RunListDetailPage({
         <div className="flex items-center gap-3">
           <StatusBadge status={runList.status} />
           <ScoreButton runListId={id} status={runList.status} />
+          <DeleteButton runListId={id} />
         </div>
       </div>
 
       <div className="flex gap-6">
-        <FilterSidebar searchParams={sp_} uniqueMakes={uniqueMakes} />
+        <FilterSidebar key={JSON.stringify(sp_)} searchParams={sp_} uniqueMakes={uniqueMakes} />
 
         <div className="flex-1 space-y-3">
           <div className="flex items-center justify-between">
