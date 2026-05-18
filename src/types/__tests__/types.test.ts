@@ -42,10 +42,10 @@ describe('FilterState', () => {
       crGradeMax: 5,
       mmrMin: 0,
       mmrMax: 100000,
-      demandRankMax: 25,
+      rankMax: 25,
       makes: [],
-      odometerMax: 150000,
+      odomMax: 150000,
     }
-    expectTypeOf(f.makes).toEqualTypeOf<string[]>()
+    expectTypeOf(f.makes).toEqualTypeOf<string[] | undefined>()
   })
 })

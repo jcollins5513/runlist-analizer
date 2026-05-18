@@ -66,7 +66,7 @@ export function UploadDialog({ sources }: { sources: Source[] }) {
         <div className="space-y-4 pt-2">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Auction Source</label>
-            <Select value={sourceId} onValueChange={setSourceId}>
+            <Select value={sourceId} onValueChange={(val) => { if (val !== null) setSourceId(val) }}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a source…" />
               </SelectTrigger>
